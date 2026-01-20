@@ -1,11 +1,5 @@
 # Exercise 07: Interactive Surfaces and Spaces
 
-**Course:** Smart Human-Computer Interaction (SHCI)  
-**Topic:** Interface Selection for Different Usage Scenarios
-
-Based on [Lecture 07 - Interactive Surfaces & Spaces](../LECTURE/shci-07-iss-intro.pdf)
-
----
 
 ## Task
 
@@ -32,7 +26,7 @@ Consider the following usage scenarios and determine which interface type would 
 
 **Most appropriate: Large Interactive Surface**
 
-A large interactive surface (horizontal or vertical) is ideal for ship navigation because maritime operations require simultaneous visualization of multiple data layers including nautical charts, radar overlays, AIS (Automatic Identification System) data, weather information, and route planning. The ship's bridge typically has multiple officers (captain, navigator, helmsman) who need shared situational awareness and must collaborate on critical decisions. A large surface allows all crew members to view the same information simultaneously and interact with different elements without obstructing each other's view. The physical size accommodates the complexity of maritime navigation data while supporting the territoriality principles discussed in the lecture—officers can have personal zones for their specific tasks while maintaining group awareness through the shared central display. Additionally, the rugged nature of maritime environments favors fixed, large displays over fragile mobile devices.
+A large interactive surface (horizontal or vertical) is ideal for ship navigation because maritime operations require simultaneous visualization of multiple data layers including nautical charts, radar overlays, AIS (Automatic Identification System) data, weather information, and route planning. The ship's bridge typically has multiple officers (captain, navigator) who need shared situational awareness and must collaborate on critical decisions. A large surface allows all crew members to view the same information simultaneously and interact with different elements without obstructing each other's view. The physical size accommodates the complexity of maritime navigation data while supporting the territoriality principles discussed in the lecture—officers can have personal zones for their specific tasks while maintaining group awareness through the shared central display. Additionally, the rugged nature of maritime environments favors fixed, large displays over fragile mobile devices.
 
 ---
 
@@ -68,8 +62,6 @@ A large interactive surface serves as the optimal primary interface for air traf
 
 ---
 
-## Key Principles from Lecture 07
-
 ### Interface Type Selection Factors:
 
 **Large Interactive Surfaces excel when:**
@@ -99,20 +91,7 @@ A large interactive surface serves as the optimal primary interface for air traf
 
 ---
 
-## References
-
-- **Lecture 07:** Interactive Surfaces & Spaces - Introduction (Dr. Florian Echtler, 2025)
-- **Examples from Lecture:**
-  - SandScape (2002) - Tangible landscape simulator
-  - Reactable (2009) - Musical instrument with tangible interaction
-  - Interactive Ads (2017) - Public display engagement
-  - Virtual Valcamonica (2018) - Collaborative MR visualization
-  - SPLOM Wall (2020) - Large-scale data visualization
-  - Anatomy Education (2024) - MR for teaching
-
----
-
-## Big Issues in ISS (Recap)
+## Big Issues in ISS
 
 1. **Infrastructure Requirements:** Complex, expensive setups limiting widespread adoption
 2. **Fatigue and Reachability:** "Gorilla arm" effect on vertical surfaces, reach limitations on large displays
