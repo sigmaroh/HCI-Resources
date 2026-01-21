@@ -6,14 +6,13 @@
 
 ---
 
-## Task
-
-The COVID-19 contact tracing protocol based on Bluetooth Low Energy was deployed on millions of smartphones but was not widely used. Analyze this system by:
-
-1. Explaining why it wasn't widely adopted despite deployment
-2. Identifying 2 false positive scenarios (warning without actual exposure)
-3. Identifying 2 false negative scenarios (missing actual exposure)
-4. Proposing mitigation strategies based on wireless communication and alternative I/O channels
+In the lecture, we have looked at the COVID-19 contact tracing protocol based on Bluetooth Low Energy.
+For this exercise, consider why this system did not end up being widely used, even though it was ultimately
+deployed on millions of smartphones. Write up two scenarios in which the app could give a false positive
+(warning about a potential infection, even though you were never exposed) and two scenarios for false
+negatives (not warning you despite potential exposure).
+Based on what you learned previously about wireless communication and alternative input/output channels,
+speculate about potential ways to mitigate these false positives and negatives.
 
 ---
 
@@ -24,24 +23,24 @@ Despite the technically elegant privacy-preserving design described in Lecture 0
 ### Technical Limitations:
 
 **1. Bluetooth Imprecision:**
-- BLE signal strength (RSSI) is a poor proxy for actual infection risk. As discussed in Lecture 02 regarding wireless communication, BLE signals are affected by reflection, absorption, and interference. A strong signal doesn't necessarily mean dangerous proximity, and vice versa.
+- BLE signals aren't accurate for measuring distance, so real exposure risk is hard to tell.
 
-**2. Battery Drain Concerns:**
-- Although BLE is "low energy," constant broadcasting and scanning still consumed noticeable battery power. As emphasized in Lecture 01 on mobile power constraints, users are extremely sensitive to battery drain and would disable Bluetooth to preserve power.
+**2. Battery Drain:**
+- Using BLE all the time still used up battery, so people would turn it off.
 
 ### Social and Behavioral Factors:
 
-**3. Trust Deficit:**
-- Despite the decentralized, privacy-preserving design, many users didn't understand the cryptographic guarantees and feared government surveillance or data misuse. The "Trust Barrier" concept from Lecture 01 applies—if users don't trust the system, they won't enable it.
+**3. Trust Issues:**
+- Many people didn't trust the app or understand how it kept their data private, so they didn't use it.
 
-**4. Low Network Effects:**
-- Contact tracing only works if a critical mass of people use it. If only 20% of the population has it enabled, it misses 80% of potential contacts, making it nearly useless. This created a vicious cycle where low adoption discouraged further adoption.
+**4. Not Enough Users:**
+- The system only works if a lot of people use it. Too few users made it ineffective.
 
-**5. Notification Fatigue:**
-- Too many false positives (discussed below) led users to ignore warnings or uninstall the app entirely, similar to the "boy who cried wolf" effect.
+**5. Too Many Warnings:**
+- Lots of false alarms made people ignore or delete the app.
 
-**6. Competing Priorities:**
-- During the pandemic, people had to balance many concerns. Keeping Bluetooth constantly enabled (a security risk) competed with other priorities like battery life, privacy, and the inconvenience of quarantine after false alarms.
+**6. Other Priorities:**
+- People had to worry about battery, privacy, and hassle, so they often disabled the app.
 
 ---
 
@@ -159,29 +158,12 @@ Based on concepts from Lectures 02 (Networks & Location), 03/04 (Mobile I/O), an
 
 **Approach:** Combine multiple wireless technologies and sensors to improve distance accuracy and context awareness.
 
-**Technologies to Integrate:**
+**Technologies to Combine:**
 
-1. **Ultra-Wideband (UWB) for Precision Ranging:**
-   - As demonstrated in the AirTags case study (Lecture 06, Part 4), UWB provides centimeter-level accuracy and directional information
-   - UWB can distinguish between 1-meter and 3-meter distances far more reliably than BLE RSSI
-   - UWB signals have better penetration characteristics, allowing the system to better estimate barriers
-   - **Tradeoff:** Not all phones have UWB hardware (only iPhone 11+ and some high-end Android devices)
-
-2. **WiFi Round-Trip Time (RTT) for Indoor Positioning:**
-   - WiFi 802.11mc supports Fine Timing Measurement (FTM/RTT) for precise ranging
-   - In indoor environments with WiFi infrastructure, combine WiFi positioning (Lecture 02: 5-15m accuracy) with BLE
-   - If two phones are connected to the same WiFi AP, use signal strength correlation to improve proximity estimation
-   - Can help detect "same room" vs. "adjacent room through wall" scenarios
-
-3. **GPS/GNSS for Outdoor Context:**
-   - When GPS indicates both phones are outdoors (vs. indoors), apply different risk thresholds
-   - GPS accuracy (5-10m from Lecture 02) is sufficient to distinguish "same outdoor space" from "different buildings"
-   - Outdoor detections could require longer duration or closer proximity before triggering warnings
-
-4. **Barometer for Floor-Level Detection:**
-   - Atmospheric pressure sensors can determine floor level in buildings (±3 meters vertical accuracy)
-   - Prevents false positives from vertically separated people (different floors in building)
-   - Helps distinguish apartment neighbor above/below from actual same-space exposure
+1. **Ultra-Wideband (UWB):** For accurate distance; more precise than BLE, but not on all phones.
+2. **WiFi RTT:** Uses WiFi signals for better indoor location and to tell if people are in the same or different rooms.
+3. **GPS:** Shows if people are outdoors or indoors; adjust warnings based on this.
+4. **Barometer:** Detects if people are on different floors to avoid false alerts through walls/floors.
 
 **Implementation:**
 ```
@@ -386,86 +368,6 @@ If (Strong_BLE_Signal AND Different_Movement_Patterns AND
 - Helps users prioritize which exposures are most concerning
 - Reduces alarm fatigue from low-priority exposures
 - Better reflects real transmission patterns (household spread is major vector)
-
----
-
-## Part 5: Comprehensive Multi-Layer Solution
-
-The ideal mitigation strategy combines multiple layers:
-
-### Layer 1: Improved Distance Measurement
-- Primary: BLE RSSI for device discovery
-- Secondary: UWB for precise ranging (when available)
-- Tertiary: WiFi RTT for indoor confirmation
-- Validation: GPS outdoor context, barometric floor separation
-
-### Layer 2: Environmental Context
-- Acoustic analysis for indoor/outdoor classification
-- Light sensor for ambient environment
-- Accelerometer for user activity (stationary/mobile)
-- Magnetometer for orientation (face-to-face detection)
-
-### Layer 3: Network Corroboration
-- WiFi BSSID matching for same-space confirmation
-- WiFi fingerprinting for location verification
-- Cell tower sanity checking
-
-### Layer 4: Barrier Detection
-- Movement pattern correlation
-- UWB penetration analysis
-- Multi-AP WiFi signal comparison
-
-### Layer 5: Risk Modeling
-- On-device ML for contextual risk scoring
-- Continuous learning from epidemiological data
-- Adaptive thresholds
-
-### Layer 6: User Feedback Loop
-- Allow users to report false positives
-- Provide contextual information with warnings ("15-min indoor exposure" vs. "45-min outdoor exposure")
-- Risk-based notifications (high/medium/low) instead of binary
-
----
-
-## Part 6: Implementation Tradeoffs
-
-### Privacy vs. Accuracy:
-- More sensors = better accuracy but more privacy concerns
-- Solution: All processing on-device, only broadcast abstracted risk levels
-- Use differential privacy techniques for any aggregate data
-
-### Battery vs. Functionality:
-- Multiple sensors running continuously = significant battery drain
-- Solution: Adaptive duty cycling – only activate additional sensors when BLE proximity detected
-- Use efficient sensor fusion algorithms optimized for mobile
-
-### Device Fragmentation:
-- Not all phones have all sensors (especially UWB)
-- Solution: Graceful degradation – use best available sensors on each device
-- Prioritize BLE as minimum viable, enhance with additional sensors when present
-
-### Complexity vs. Adoption:
-- More sophisticated system = more complex to explain and trust
-- Solution: Simple user interface hiding complex backend
-- Transparent about what data is collected and how it's used
-
----
-
-## Conclusion
-
-The COVID-19 contact tracing system's failure wasn't primarily technical—the privacy-preserving cryptographic protocol was elegant. The failure was in the gap between BLE's capabilities and the actual complexity of assessing infection risk. By incorporating insights from:
-
-- **Lecture 02** (multi-modal positioning, sensor fusion, wireless characteristics)
-- **Lecture 03/04** (rich mobile sensors, context inference)
-- **Lecture 06** (multi-technology approaches like AirTags, privacy-by-design)
-
-We can envision a more robust system that:
-1. Reduces false positives through barrier detection and context awareness
-2. Reduces false negatives through multi-sensor redundancy and behavioral monitoring
-3. Maintains privacy through on-device processing
-4. Provides actionable, contextualized risk information to users
-
-The key lesson: **simple proximity is not enough.** Effective contact tracing requires understanding the full context—physical barriers, environmental conditions, duration, distance, and behavior—while preserving user privacy and maintaining battery efficiency. This is the essence of mobile system design: balancing multiple constraints to deliver a solution that actually works in the messy, complex real world.
 
 ---
 
