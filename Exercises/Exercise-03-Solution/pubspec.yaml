@@ -1,0 +1,18 @@
+name: throw_height_app
+description: A simple app to measure throw height using accelerometer.
+publish_to: "none"
+
+environment:
+  sdk: ">=2.17.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sensors_plus: ^7.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

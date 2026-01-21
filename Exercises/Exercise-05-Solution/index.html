@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Winter AR World! • A-Frame</title>
+    <meta name="description" content="Winter AR World! • A-Frame">
+    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+    <script>
+      AFRAME.registerComponent('follow-shadow', {
+        schema: {type: 'selector'},
+        init() {this.el.object3D.renderOrder = -1;},
+        tick() {
+          if (this.data) {
+            this.el.object3D.position.copy(this.data.object3D.position);
+            this.el.object3D.position.y-=0.001; // stop z-fighting
+          }
+        }
+      });
+
+      // Custom AR hit test component that spawns new objects
+      AFRAME.registerComponent('ar-hit-test-spawn', {
+        init() {
+          this.scene = this.el.sceneEl;
+          this.objectCounter = 0;
+          this.objectType = 'snowman'; // Toggle between 'snowman' and 'tree'
+          
+          // Bind event handler
+          this.onSelect = this.onSelect.bind(this);
+          
+          // Wait for AR mode to be entered
+          this.scene.addEventListener('enter-vr', () => {
+            if (this.scene.is('ar-mode')) {
+              this.xrSession = this.scene.renderer.xr.getSession();
+              if (this.xrSession) {
+                this.xrSession.addEventListener('select', this.onSelect);
+                
+                // Set up XR hit test source
+                this.xrSession.requestReferenceSpace('viewer').then((refSpace) => {
+                  this.xrViewerSpace = refSpace;
+                  this.xrSession.requestHitTestSource({ space: this.xrViewerSpace }).then((hitTestSource) => {
+                    this.xrHitTestSource = hitTestSource;
+                  });
+                });
+              }
+            }
+          });
+          
+          this.scene.addEventListener('exit-vr', () => {
+            if (this.xrHitTestSource) {
+              this.xrHitTestSource.cancel();
+              this.xrHitTestSource = null;
+            }
+            if (this.xrSession) {
+              this.xrSession.removeEventListener('select', this.onSelect);
+              this.xrSession = null;
+            }
+          });
+        },
+        
+        tick() {
+          if (!this.xrHitTestSource || !this.scene.is('ar-mode')) return;
+          
+          const frame = this.scene.frame;
+          if (!frame) return;
+          
+          const hitTestResults = frame.getHitTestResults(this.xrHitTestSource);
+          if (hitTestResults.length > 0) {
+            const hit = hitTestResults[0];
+            const pose = hit.getPose(this.scene.renderer.xr.getReferenceSpace());
+            
+            if (pose) {
+              this.lastHitPose = pose;
+            }
+          }
+        },
+        
+        onSelect() {
+          if (!this.lastHitPose) return;
+          
+          const position = this.lastHitPose.transform.position;
+          
+          // Create new object at hit location
+          const container = document.createElement('a-entity');
+          container.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+          
+          // Alternate between snowman and tree
+          if (this.objectType === 'snowman') {
+            this.createSnowman(container);
+            this.objectType = 'tree';
+          } else {
+            this.createTree(container);
+            this.objectType = 'snowman';
+          }
+          
+          this.scene.appendChild(container);
+          this.objectCounter++;
+        },
+        
+        createSnowman(container) {
+          const snowman = document.createElement('a-entity');
+          snowman.setAttribute('scale', '0.15 0.15 0.15');
+          
+          // Bottom sphere
+          const bottom = document.createElement('a-sphere');
+          bottom.setAttribute('radius', '1');
+          bottom.setAttribute('position', '0 0.5 0');
+          bottom.setAttribute('color', '#FFFFFF');
+          bottom.setAttribute('shadow', 'cast: true');
+          snowman.appendChild(bottom);
+          
+          // Middle sphere
+          const middle = document.createElement('a-sphere');
+          middle.setAttribute('radius', '0.75');
+          middle.setAttribute('position', '0 1.7 0');
+          middle.setAttribute('color', '#FFFFFF');
+          middle.setAttribute('shadow', 'cast: true');
+          snowman.appendChild(middle);
+          
+          // Top sphere (head)
+          const head = document.createElement('a-sphere');
+          head.setAttribute('radius', '0.5');
+          head.setAttribute('position', '0 2.6 0');
+          head.setAttribute('color', '#FFFFFF');
+          head.setAttribute('shadow', 'cast: true');
+          snowman.appendChild(head);
+          
+          // Carrot nose
+          const nose = document.createElement('a-cone');
+          nose.setAttribute('radius-bottom', '0.1');
+          nose.setAttribute('radius-top', '0.01');
+          nose.setAttribute('height', '0.4');
+          nose.setAttribute('position', '0 2.6 0.5');
+          nose.setAttribute('rotation', '90 0 0');
+          nose.setAttribute('color', '#FF6347');
+          snowman.appendChild(nose);
+          
+          // Eyes
+          const leftEye = document.createElement('a-sphere');
+          leftEye.setAttribute('radius', '0.08');
+          leftEye.setAttribute('position', '-0.15 2.7 0.45');
+          leftEye.setAttribute('color', '#000000');
+          snowman.appendChild(leftEye);
+          
+          const rightEye = document.createElement('a-sphere');
+          rightEye.setAttribute('radius', '0.08');
+          rightEye.setAttribute('position', '0.15 2.7 0.45');
+          rightEye.setAttribute('color', '#000000');
+          snowman.appendChild(rightEye);
+          
+          // Buttons
+          for (let i = 0; i < 3; i++) {
+            const button = document.createElement('a-sphere');
+            button.setAttribute('radius', '0.1');
+            button.setAttribute('position', `0 ${1.7 - i * 0.3} 0.75`);
+            button.setAttribute('color', '#000000');
+            snowman.appendChild(button);
+          }
+          
+          // Hat (red cone)
+          const hat = document.createElement('a-cone');
+          hat.setAttribute('radius-bottom', '0.4');
+          hat.setAttribute('radius-top', '0.1');
+          hat.setAttribute('height', '1.1');
+          hat.setAttribute('position', '0 3.4 0');
+          hat.setAttribute('color', 'red');
+          hat.setAttribute('shadow', 'cast: true');
+          snowman.appendChild(hat);
+          
+          // Hat top (black sphere)
+          const hatTop = document.createElement('a-sphere');
+          hatTop.setAttribute('radius', '0.10');
+          hatTop.setAttribute('position', '0 4.1 0');
+          hatTop.setAttribute('color', '#000000');
+          snowman.appendChild(hatTop);
+          
+          container.appendChild(snowman);
+        },
+        
+        createTree(container) {
+          const tree = document.createElement('a-entity');
+          tree.setAttribute('scale', '0.15 0.15 0.15');
+          
+          // Trunk
+          const trunk = document.createElement('a-cylinder');
+          trunk.setAttribute('radius', '0.2');
+          trunk.setAttribute('height', '1.5');
+          trunk.setAttribute('position', '0 0.75 0');
+          trunk.setAttribute('color', '#FFC65D');
+          trunk.setAttribute('shadow', 'cast: true');
+          tree.appendChild(trunk);
+          
+          // Tree foliage (4 cones stacked)
+          const coneHeights = [2, 1.8, 1.6, 1.4];
+          const coneYPositions = [2.2, 3.2, 4, 4.8];
+          
+          for (let i = 0; i < 4; i++) {
+            const cone = document.createElement('a-cone');
+            cone.setAttribute('radius-bottom', `${1.2 - i * 0.2}`);
+            cone.setAttribute('radius-top', '0.1');
+            cone.setAttribute('height', coneHeights[i]);
+            cone.setAttribute('position', `0 ${coneYPositions[i]} 0`);
+            cone.setAttribute('color', '#0B6623');
+            cone.setAttribute('shadow', 'cast: true');
+            tree.appendChild(cone);
+          }
+          
+          // Star on top (red)
+          const star = document.createElement('a-sphere');
+          star.setAttribute('radius', '0.10');
+          star.setAttribute('position', '0 5.6 0');
+          star.setAttribute('color', '#EF2D5E');
+          tree.appendChild(star);
+          
+          container.appendChild(tree);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene
+      reflection="directionalLight: a-light[type=directional]"
+      ar-hit-test-spawn
+      renderer="colorManagement: true; exposure: 1; toneMapping: ACESFilmic"
+      shadow="type: pcfsoft"
+      xr-mode-ui="XRMode: xr"
+    >
+      <a-light type="directional" light="castShadow:true;" position="1 1 1" intensity="1.57"></a-light>
+      <a-camera position="0 0.4 0" wasd-controls="acceleration:10;"></a-camera>
+      
+      
+  
+      <a-entity id="preview-objects" position="0 0 -1">
+        
+        <a-entity id="objects" scale="0.15 0.15 0.15" position="0.6 0 -1" shadow>
+          <a-box position="-1 0.5 1" rotation="0 45 0" color="#4CC3D9"></a-box>
+          <a-sphere position="0 1.25 -1" radius="1.25" color="#EF2D5E"></a-sphere>
+          <a-cylinder position="1 0.75 1" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
+        </a-entity>
+
+         <!-- Snowman -->
+        <a-entity scale="0.15 0.15 0.15" position="-0.5 0 -1" >
+          <a-sphere radius="1" position="0 0.5 0" color="#FFFFFF" shadow="cast: true"></a-sphere>
+          <a-sphere radius="0.75" position="0 1.7 0" color="#FFFFFF" shadow="cast: true"></a-sphere>
+          <a-sphere radius="0.5" position="0 2.6 0" color="#FFFFFF" shadow="cast: true"></a-sphere>
+          <a-cone radius-bottom="0.1" radius-top="0.01" height="0.4" position="0 2.6 0.5" rotation="90 0 0" color="#FF6347"></a-cone>
+          <a-sphere radius="0.08" position="-0.15 2.7 0.45" color="#000000"></a-sphere>
+          <a-sphere radius="0.08" position="0.15 2.7 0.45" color="#000000"></a-sphere>
+          <a-sphere radius="0.1" position="0 1.7 0.75" color="#000000"></a-sphere>
+          <a-sphere radius="0.1" position="0 1.4 0.75" color="#000000"></a-sphere>
+          <a-sphere radius="0.1" position="0 1.1 0.75" color="#000000"></a-sphere>
+          <a-cone radius-bottom="0.4" radius-top="0.1" height="1.1" position="0 3.4 0" color="red" shadow="cast: true"></a-cone>
+          <a-sphere radius="0.10" position="0 4.1 0" color="#000000"></a-sphere>
+        </a-entity>
+        
+        <!-- Pine Tree -->
+        <a-entity scale="0.15 0.15 0.15"position="0 0 -1" >
+          <a-cylinder radius="0.2" height="1.5" position="0 0.75 0" color="#FFC65D" shadow="cast: true"></a-cylinder>
+          <a-cone radius-bottom="1.2" radius-top="0.1" height="2" position="0 2.2 0" color="#0B6623" shadow="cast: true"></a-cone>
+          <a-cone radius-bottom="1.0" radius-top="0.1" height="1.8" position="0 3.2 0" color="#0B6623" shadow="cast: true"></a-cone>
+          <a-cone radius-bottom="0.8" radius-top="0.1" height="1.6" position="0 4 0" color="#0B6623" shadow="cast: true"></a-cone>
+          <a-cone radius-bottom="0.6" radius-top="0.1" height="1.4" position="0 4.8 0" color="#0B6623" shadow="cast: true"></a-cone>
+          <a-sphere radius="0.10" position="0 5.6 0" color="#EF2D5E"></a-sphere>
+        </a-entity>
+      </a-entity>
+      
+      <a-plane material="shader:shadow" shadow="cast:false;" rotation="-90 0 0" width="4" height="4" position="0 0 -1.5"></a-plane>
+      <a-sky color="#E0F6FF" hide-on-enter-ar></a-sky>
+    </a-scene>
+  </body>
+</html>
